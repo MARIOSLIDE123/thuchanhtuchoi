@@ -1,6 +1,7 @@
 /**
- * Dữ liệu kịch bản chuẩn cho toàn bộ 3 tình huống hội thoại phân nhánh.
- * Giữ nguyên 100% nguyên văn toàn bộ nội dung, câu chữ và logic được cung cấp.
+ * Dữ liệu kịch bản chuẩn cho toàn bộ 3 phần.
+ * Giữ nguyên 100% nội dung gốc của Scene 1 -> Scene 13.
+ * Bổ sung đúng 6 tình huống mới (mỗi phần 2 tình huống) theo yêu cầu.
  */
 
 export const APP_INFO = {
@@ -31,7 +32,9 @@ export const MISSIONS_INFO = [
   },
 ];
 
-// ======================== TÌNH HUỐNG 1 ========================
+// =========================================================================
+// ======================== PHẦN 1: ÁP LỰC TỪ BẠN BÈ =======================
+// =========================================================================
 
 export const SCENE_1_DATA = {
   title: 'SCENE 1 – LỜI RỦ RÊ ĐẦU TIÊN',
@@ -133,10 +136,80 @@ export const SCENE_5_DATA = {
       successTitle: 'CHÍNH XÁC!',
     },
   ],
-  nextMissionButton: 'SANG TÌNH HUỐNG TIẾP THEO (NHIỆM VỤ 2)',
+  nextMissionButton: 'SANG TÌNH HUỐNG TIẾP THEO (TÌNH HUỐNG 1.1)',
 };
 
-// ======================== TÌNH HUỐNG 2 ========================
+// --- BỔ SUNG PHẦN 1: TÌNH HUỐNG 1.1 MỚI ---
+export const SCENE_1_1_NEW_DATA = {
+  title: 'TÌNH HUỐNG 1.1 – ĐỪNG LÀM MẤT TÌNH BẠN',
+  context: 'Sau giờ học, Nam và một người bạn khác đang đứng ở sân sau trường.',
+  characterName: 'Nam',
+  characterState: 'Nam – giọng rủ rê, phân vân',
+  dialog: '“Ê, hôm nay tụi tớ thử cái này nhé! Cậu không thử thì tụi tớ chơi với ai?”',
+  choices: [
+    {
+      id: 'A',
+      label: 'LỰA CHỌN A',
+      text: '“Ừ... thôi được, tớ thử một lần để khỏi bị các cậu chê.”',
+      isCorrect: false,
+      feedback: 'Chưa an toàn! Cả nể làm theo điều có hại vì sợ bị chê sẽ khiến em rơi vào nguy hiểm. Tình bạn thực sự không ép buộc nhau làm điều sai trái.',
+    },
+    {
+      id: 'B',
+      label: 'LỰA CHỌN B',
+      text: '“Tớ không thử đâu. Bạn bè thật sự thì phải tôn trọng quyết định của nhau.”',
+      isCorrect: true,
+      feedback: 'Rất tốt! Biết nói ‘không’ không có nghĩa là mất đi tình bạn. Một người bạn tốt sẽ tôn trọng lựa chọn an toàn của em.',
+    },
+    {
+      id: 'C',
+      label: 'LỰA CHỌN C',
+      text: '“Cậu thích làm gì thì làm, nhưng đừng rủ tớ nữa.”',
+      isCorrect: false,
+      feedback: 'Chưa phù hợp! Thái độ gay gắt dễ gây xung đột, và quan trọng là chưa giải thích cho bạn hiểu rằng bạn bè cần tôn trọng sự an toàn của nhau.',
+    },
+  ],
+  nextButton: 'SANG TÌNH HUỐNG 1.2',
+  retryButton: 'CHỌN LẠI',
+};
+
+// --- BỔ SUNG PHẦN 1: TÌNH HUỐNG 1.2 MỚI ---
+export const SCENE_1_2_NEW_DATA = {
+  title: 'TÌNH HUỐNG 1.2 – CHỈ CẦN GIẤU NGƯỜI LỚN',
+  context: 'Một nhóm bạn rủ học sinh thử một sản phẩm lạ và nói rằng người lớn sẽ không biết.',
+  characterName: 'Nam',
+  characterState: 'Nam – thuyết phục, hơi thúc giục',
+  dialog: '“Yên tâm đi, chỉ cần cậu đừng nói với ai là chẳng có chuyện gì đâu.”',
+  choices: [
+    {
+      id: 'A',
+      label: 'LỰA CHỌN A',
+      text: '“Được, tớ sẽ giữ bí mật.”',
+      isCorrect: false,
+      feedback: 'Sai lầm nguy hiểm! Giữ bí mật về những hành vi độc hại sẽ khiến em và các bạn rơi vào nguy cơ khôn lường.',
+    },
+    {
+      id: 'B',
+      label: 'LỰA CHỌN B',
+      text: '“Không. Chuyện có thể ảnh hưởng đến an toàn của mình thì tớ sẽ nói với người lớn đáng tin cậy.”',
+      isCorrect: true,
+      feedback: 'Chính xác! Khi có nguy cơ ảnh hưởng đến sự an toàn, em không nên giữ bí mật chỉ vì bị yêu cầu. Hãy tìm một người lớn đáng tin cậy để được hỗ trợ.',
+    },
+    {
+      id: 'C',
+      label: 'LỰA CHỌN C',
+      text: '“Tớ sẽ kể cho một người bạn khác trước.”',
+      isCorrect: false,
+      feedback: 'Chưa tối ưu! Bạn bè cùng lứa tuổi thường chưa có đủ kỹ năng xử lý tình huống nguy hiểm. Em cần tìm đến người lớn có trách nhiệm.',
+    },
+  ],
+  nextButton: 'HOÀN THÀNH PHẦN 1 · SANG PHẦN 2',
+  retryButton: 'CHỌN LẠI',
+};
+
+// =========================================================================
+// ==================== PHẦN 2: CẢNH GIÁC ĐỒ UỐNG, SẢN PHẨM LẠ ==============
+// =========================================================================
 
 export const SCENE_6_DATA = {
   title: 'SCENE 6 – LỜI MỜI BẤT NGỜ',
@@ -197,10 +270,80 @@ export const SCENE_9_DATA = {
     title: 'Rất tốt!',
     content: 'Rất tốt! Em đã biết từ chối, giữ khoảng cách và lựa chọn cách xử lý an toàn. Đây chính là cách bảo vệ bản thân trước những lời mời đáng ngờ.',
   },
-  nextButton: 'SANG TÌNH HUỐNG TIẾP THEO (NHIỆM VỤ 3)',
+  nextButton: 'SANG TÌNH HUỐNG TIẾP THEO (TÌNH HUỐNG 2.1)',
 };
 
-// ======================== TÌNH HUỐNG 3 ========================
+// --- BỔ SUNG PHẦN 2: TÌNH HUỐNG 2.1 MỚI ---
+export const SCENE_2_1_NEW_DATA = {
+  title: 'TÌNH HUỐNG 2.1 – MÓN QUÀ KHÔNG TÊN',
+  context: 'Sau một buổi hoạt động, một người lạ đứng gần cổng trường đưa cho học sinh một hộp quà nhỏ.',
+  characterName: 'Người lạ',
+  characterState: 'Người lớn thân thiện, nhưng hơi thuyết phục',
+  dialog: '“Cô/chú có quà cho các em này. Cầm lấy nhé, bên trong là đồ ăn ngon đấy!”',
+  choices: [
+    {
+      id: 'A',
+      label: 'LỰA CHỌN A',
+      text: '“Cảm ơn ạ!” rồi nhận lấy ngay.',
+      isCorrect: false,
+      feedback: 'Cực kỳ nguy hiểm! Tuyệt đối không nhận đồ ăn, thức uống không rõ nguồn gốc từ người lạ vì có thể chứa chất cấm hoặc hóa chất độc hại.',
+    },
+    {
+      id: 'B',
+      label: 'LỰA CHỌN B',
+      text: '“Cháu cảm ơn, nhưng cháu không nhận đồ từ người lạ ạ.”',
+      isCorrect: true,
+      feedback: 'Hoàn toàn chính xác! Khi không biết rõ nguồn gốc của một sản phẩm, em không nên nhận hoặc tự ý mở. Hãy từ chối lịch sự và tìm người lớn đáng tin cậy.',
+    },
+    {
+      id: 'C',
+      label: 'LỰA CHỌN C',
+      text: 'Nhận hộp quà rồi mở ngay để xem bên trong có gì.',
+      isCorrect: false,
+      feedback: 'Rất nguy hiểm! Tự ý mở đồ vật lạ có thể khiến em tiếp xúc với chất độc hoặc bụi độc phát tán trong không khí.',
+    },
+  ],
+  nextButton: 'SANG TÌNH HUỐNG 2.2',
+  retryButton: 'CHỌN LẠI',
+};
+
+// --- BỔ SUNG PHẦN 2: TÌNH HUỐNG 2.2 MỚI ---
+export const SCENE_2_2_NEW_DATA = {
+  title: 'TÌNH HUỐNG 2.2 – BAO BÌ THẬT ĐẸP',
+  context: 'Một bạn mang đến một gói đồ uống có bao bì rất bắt mắt, nhiều màu sắc và ký hiệu lạ.',
+  characterName: 'Bạn học sinh',
+  characterState: 'Bạn học sinh – tò mò, hào hứng',
+  dialog: '“Nhìn đẹp quá! Chắc là đồ uống mới đấy. Mở ra thử đi!”',
+  choices: [
+    {
+      id: 'A',
+      label: 'LỰA CHỌN A',
+      text: '“Được, mở ra xem thử.”',
+      isCorrect: false,
+      feedback: 'Chưa đúng! Bao bì bắt mắt là chiêu trò ngụy trang phổ biến của các loại ma túy mới (như Nước vui, Trà sữa...). Tuyệt đối không tự ý mở nếm.',
+    },
+    {
+      id: 'B',
+      label: 'LỰA CHỌN B',
+      text: '“Bao bì đẹp thì chắc an toàn thôi.”',
+      isCorrect: false,
+      feedback: 'Sai lầm nghiêm trọng! Rất nhiều chất độc hại được đóng gói tinh vi dưới dạng bánh kẹo, nước ngọt sặc sỡ để đánh lừa học sinh.',
+    },
+    {
+      id: 'C',
+      label: 'LỰA CHỌN C',
+      text: '“Đừng thử. Mình không biết rõ nguồn gốc của nó, tốt nhất báo cho thầy cô hoặc người lớn.”',
+      isCorrect: true,
+      feedback: 'Chính xác! Bao bì bắt mắt không có nghĩa là sản phẩm an toàn. Khi gặp sản phẩm lạ hoặc không rõ nguồn gốc, nguyên tắc an toàn là không thử và báo cho người lớn.',
+    },
+  ],
+  nextButton: 'HOÀN THÀNH PHẦN 2 · SANG PHẦN 3',
+  retryButton: 'CHỌN LẠI',
+};
+
+// =========================================================================
+// ================= PHẦN 3: KHÔNG LÀM NGƠ VÀ BIẾT TÌM SỰ GIÚP ĐỠ ============
+// =========================================================================
 
 export const SCENE_10_DATA = {
   title: 'SCENE 10 – PHÁT HIỆN ĐỒ VẬT BẤT THƯỜNG',
@@ -261,12 +404,79 @@ export const SCENE_13_DATA = {
     title: 'Chính xác!',
     content: 'Chính xác! Em đã bình tĩnh, không tự ý chạm vào đồ vật đáng ngờ và biết tìm người lớn đáng tin cậy để hỗ trợ. Đó là một lựa chọn rất an toàn.',
   },
-  completionButton: 'HOÀN THÀNH 3 TÌNH HUỐNG',
+  nextButton: 'SANG TÌNH HUỐNG TIẾP THEO (TÌNH HUỐNG 3.1)',
+};
+
+// --- BỔ SUNG PHẦN 3: TÌNH HUỐNG 3.1 MỚI ---
+export const SCENE_3_1_NEW_DATA = {
+  title: 'TÌNH HUỐNG 3.1 – MÌNH CÓ NÊN NÓI KHÔNG?',
+  context: 'Một học sinh nhìn thấy một người bạn có biểu hiện bất thường và được một nhóm bạn kéo vào một góc khuất.',
+  characterName: 'Bạn bên cạnh',
+  characterState: 'Bạn bên cạnh – lo ngại, nói nhỏ nhưng rõ ràng',
+  dialog: '“Kệ đi, chuyện của họ. Đừng liên quan vào, rắc rối lắm.”',
+  choices: [
+    {
+      id: 'A',
+      label: 'LỰA CHỌN A',
+      text: '“Ừ, mình không quan tâm.”',
+      isCorrect: false,
+      feedback: 'Thờ ơ, làm ngơ trước hiểm nguy của bạn bè là gián tiếp để bạn mình rơi vào nguy kịch.',
+    },
+    {
+      id: 'B',
+      label: 'LỰA CHỌN B',
+      text: '“Mình sẽ đăng lên mạng để mọi người biết.”',
+      isCorrect: false,
+      feedback: 'Không nên! Đăng lên mạng xã hội vừa vi phạm quyền riêng tư, vừa không kịp thời cứu giúp bạn trong tình huống khẩn cấp.',
+    },
+    {
+      id: 'C',
+      label: 'LỰA CHỌN C',
+      text: '“Mình sẽ báo cho giáo viên hoặc một người lớn đáng tin cậy để họ hỗ trợ.”',
+      isCorrect: true,
+      feedback: 'Rất tốt! Không làm ngơ trước nguy cơ không có nghĩa là tự mình giải quyết. Cách an toàn là tìm người lớn đáng tin cậy để được hỗ trợ.',
+    },
+  ],
+  nextButton: 'SANG TÌNH HUỐNG 3.2',
+  retryButton: 'CHỌN LẠI',
+};
+
+// --- BỔ SUNG PHẦN 3: TÌNH HUỐNG 3.2 MỚI ---
+export const SCENE_3_2_NEW_DATA = {
+  title: 'TÌNH HUỐNG 3.2 – ĐỪNG ĐĂNG LÊN MẠNG',
+  context: 'Một bạn học sinh phát hiện chuyện đáng ngờ và rất tức giận.',
+  characterName: 'Bạn học sinh',
+  characterState: 'Bạn học sinh – bức xúc, nóng vội',
+  dialog: '“Tớ chụp lại rồi đăng lên mạng cho mọi người biết, để nhóm đó bị xấu hổ!”',
+  choices: [
+    {
+      id: 'A',
+      label: 'LỰA CHỌN A',
+      text: '“Đúng rồi, đăng ngay đi!”',
+      isCorrect: false,
+      feedback: 'Sai lầm! Đăng lên mạng xã hội dễ dẫn đến xung đột, kích động bạo lực mạng và cản trở việc xử lý đúng đắn của nhà trường.',
+    },
+    {
+      id: 'B',
+      label: 'LỰA CHỌN B',
+      text: '“Không nên đăng công khai. Mình nên báo trực tiếp cho thầy cô, cha mẹ hoặc người lớn đáng tin cậy.”',
+      isCorrect: true,
+      feedback: 'Chính xác! Khi gặp vấn đề nghiêm trọng, mạng xã hội không phải là nơi để tự xử lý. Hãy chia sẻ thông tin với người có trách nhiệm để được hỗ trợ đúng cách.',
+    },
+    {
+      id: 'C',
+      label: 'LỰA CHỌN C',
+      text: '“Chụp thêm ảnh rồi gửi vào nhóm lớp cho mọi người cùng bàn luận.”',
+      isCorrect: false,
+      feedback: 'Không nên! Việc lan truyền thông tin chưa được kiểm chứng trong nhóm lớp gây hoang mang và vi phạm nguyên tắc giải quyết vấn đề.',
+    },
+  ],
+  nextButton: 'HOÀN THÀNH TẤT CẢ 3 PHẦN · XEM KẾT QUẢ',
+  retryButton: 'CHỌN LẠI',
 };
 
 export const COMPLETION_DATA = {
-  title: 'HOÀN THÀNH 3 TÌNH HUỐNG',
+  title: 'HOÀN THÀNH XUẤT SẮC TOÀN BỘ CÁC TÌNH HUỐNG',
   badge: 'DŨNG SĨ BẢN LĨNH THÁM TỬ',
   playAgainButton: 'CHƠI LẠI TỪ ĐẦU',
 };
-

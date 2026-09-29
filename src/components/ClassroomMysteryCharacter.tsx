@@ -2,11 +2,11 @@ import React from 'react';
 import { AlertOctagon, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface ClassroomMysteryCharacterProps {
-  sceneId: 'scene_10' | 'scene_11' | 'scene_12' | 'scene_13';
+  sceneId?: string;
   stateLabel: string;
 }
 
-export const ClassroomMysteryCharacter: React.FC<ClassroomMysteryCharacterProps> = ({ sceneId, stateLabel }) => {
+export const ClassroomMysteryCharacter: React.FC<ClassroomMysteryCharacterProps> = ({ sceneId = 'scene_10', stateLabel }) => {
   return (
     <div className={`relative w-full h-full min-h-[380px] max-h-[580px] flex flex-col items-center justify-between p-4 overflow-hidden rounded-2xl border-2 shadow-inner transition-colors duration-300 ${
       sceneId === 'scene_13'

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Award, RotateCcw, ShieldCheck, HeartHandshake, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { Trophy, Award, RotateCcw, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 import { COMPLETION_DATA } from '../data/scenarioData';
 
 interface CompletionScreenProps {
@@ -27,7 +27,7 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({ score, onRes
       </div>
 
       {/* Main Title */}
-      <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight uppercase mt-2">
+      <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight uppercase mt-2">
         {COMPLETION_DATA.title}
       </h2>
 
@@ -39,47 +39,68 @@ export const CompletionScreen: React.FC<CompletionScreenProps> = ({ score, onRes
             ĐIỂM BẢN LĨNH THÁM TỬ ĐẠT ĐƯỢC
           </div>
           <div className="text-2xl sm:text-3xl font-black text-emerald-700 tabular-nums">
-            {score} / 100 ĐIỂM
+            {score} / 100 ĐIỂM TỐI ĐA
           </div>
         </div>
       </div>
 
-      {/* Summary of 3 Completed Missions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4 w-full max-w-3xl text-left">
-        <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0" />
-            <h3 className="font-extrabold text-sky-900 text-xs uppercase">Nhiệm Vụ 1: Áp Lực Bạn Bè</h3>
+      {/* Summary of 3 Completed Missions with 9 Scenarios */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 my-4 w-full max-w-3xl text-left">
+        <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0" />
+              <h3 className="font-extrabold text-sky-900 text-xs uppercase">Nhiệm Vụ 1: Áp Lực Bạn Bè</h3>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+              ✓ Từ chối hút Pod vị đào.<br />
+              ✓ Không nhận giữ hộ đồ cấm vào cặp.<br />
+              ✓ Đứng vững trước áp lực tẩy chay.
+            </p>
           </div>
-          <p className="text-xs text-slate-700 leading-relaxed font-medium">
-            Kiên quyết từ chối hút thử Pod, cảnh báo ma túy ngụy trang và báo người lớn đáng tin cậy.
-          </p>
+          <span className="mt-2 text-[10px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded self-start">
+            3/3 Tình huống đạt chuẩn
+          </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
-            <h3 className="font-extrabold text-teal-900 text-xs uppercase">Nhiệm Vụ 2: Lời Mời Đồ Uống</h3>
+        <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
+              <h3 className="font-extrabold text-teal-900 text-xs uppercase">Nhiệm Vụ 2: Lời Mời Cổng Trường</h3>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+              ✓ Không uống ly nước lạ miễn phí.<br />
+              ✓ Cảnh giác kẹo dẻo sô-cô-la phát thử.<br />
+              ✓ Không xách túi đồ hộ người lạ & lên xe.
+            </p>
           </div>
-          <p className="text-xs text-slate-700 leading-relaxed font-medium">
-            Không nhận đồ ăn uống lạ ở cổng trường, không đứng lại tò mò, giữ khoảng cách và về với bố mẹ.
-          </p>
+          <span className="mt-2 text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded self-start">
+            3/3 Tình huống đạt chuẩn
+          </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
-            <h3 className="font-extrabold text-purple-900 text-xs uppercase">Nhiệm Vụ 3: Đồ Vật Đáng Ngờ</h3>
+        <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+              <h3 className="font-extrabold text-purple-900 text-xs uppercase">Nhiệm Vụ 3: Đồ Vật Đáng Ngờ</h3>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+              ✓ Không tự ý mở gói đồ lạ trong lớp.<br />
+              ✓ Nhận diện Tem giấy ma túy bùa lưỡi LSD.<br />
+              ✓ Ngăn chặn bột "Nước vui" pha nước uống.
+            </p>
           </div>
-          <p className="text-xs text-slate-700 leading-relaxed font-medium">
-            Tuyệt đối không tự ý mở, nếm, cầm đồ vật lạ; lùi lại vùng an toàn và báo ngay cho giáo viên.
-          </p>
+          <span className="mt-2 text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded self-start">
+            3/3 Tình huống đạt chuẩn
+          </span>
         </div>
       </div>
 
       {/* Congratulatory note */}
-      <p className="text-xs sm:text-sm font-semibold text-slate-600 max-w-xl mb-5">
-        Chúc mừng em đã hoàn thành xuất sắc cả 3 tình huống! Bản lĩnh kiên định, sự thận trọng và tinh thần trách nhiệm chính là vũ khí tốt nhất để bảo vệ bản thân và trường học.
+      <p className="text-xs sm:text-sm font-semibold text-slate-600 max-w-2xl mb-5">
+        Chúc mừng em đã xuất sắc vượt qua toàn bộ 9 tình huống thực chiến! Sự hiểu biết đúng đắn, lòng can đảm và bản lĩnh kiên định chính là lá chắn thép vững chắc nhất bảo vệ em, gia đình và bạn bè trước mọi cạm bẫy học đường.
       </p>
 
       {/* Restart Button */}

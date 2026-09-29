@@ -1,11 +1,11 @@
 import React from 'react';
 
 interface OlderStudentCharacterProps {
-  sceneId: 'scene_6' | 'scene_7' | 'scene_8' | 'scene_9';
+  sceneId?: string;
   stateLabel: string;
 }
 
-export const OlderStudentCharacter: React.FC<OlderStudentCharacterProps> = ({ sceneId, stateLabel }) => {
+export const OlderStudentCharacter: React.FC<OlderStudentCharacterProps> = ({ sceneId = 'scene_6', stateLabel }) => {
   return (
     <div className="relative w-full h-full min-h-[380px] max-h-[580px] flex flex-col items-center justify-between p-4 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-100 via-amber-50 to-orange-100/70 border-2 border-sky-300 shadow-inner">
       {/* Background School Gate Elements */}

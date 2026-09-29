@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AlertTriangle,
   RotateCcw,
@@ -9,6 +9,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   CheckCircle2,
+  RefreshCw,
+  Volume2,
 } from 'lucide-react';
 import { SceneId, MissionNumber } from './types/simulation';
 import {
@@ -17,16 +19,23 @@ import {
   SCENE_3_DATA,
   SCENE_4_DATA,
   SCENE_5_DATA,
+  SCENE_1_1_NEW_DATA,
+  SCENE_1_2_NEW_DATA,
   SCENE_6_DATA,
   SCENE_7_DATA,
   SCENE_8_DATA,
   SCENE_9_DATA,
+  SCENE_2_1_NEW_DATA,
+  SCENE_2_2_NEW_DATA,
   SCENE_10_DATA,
   SCENE_11_DATA,
   SCENE_12_DATA,
   SCENE_13_DATA,
+  SCENE_3_1_NEW_DATA,
+  SCENE_3_2_NEW_DATA,
 } from './data/scenarioData';
 import { playSound, ambienceEngine, AmbienceType } from './utils/soundEffects';
+import { voiceService, CharacterVoice } from './utils/voiceService';
 import { ScoreHeader } from './components/ScoreHeader';
 import { NamCharacter } from './components/NamCharacter';
 import { OlderStudentCharacter } from './components/OlderStudentCharacter';
@@ -43,14 +52,20 @@ const SCENE_AMBIENCE_MAP: Record<SceneId, AmbienceType> = {
   scene_3: 'corridor_tense',
   scene_4: 'corridor',
   scene_5: 'peaceful',
+  scene_1_1_new: 'corridor',
+  scene_1_2_new: 'corridor',
   scene_6: 'school_gate',
   scene_7: 'school_gate',
   scene_8: 'school_gate',
   scene_9: 'school_gate',
+  scene_2_1_new: 'school_gate',
+  scene_2_2_new: 'school_gate',
   scene_10: 'classroom',
   scene_11: 'classroom',
   scene_12: 'classroom',
   scene_13: 'classroom',
+  scene_3_1_new: 'classroom',
+  scene_3_2_new: 'classroom',
   completed: 'peaceful',
 };
 
@@ -66,10 +81,22 @@ export default function App() {
   const [scene3ShowError, setScene3ShowError] = useState<boolean>(false);
   const [scene5SelectedOption, setScene5SelectedOption] = useState<string | null>(null);
 
+  // State cho 6 tình huống mới
+  const [scene11SelectedChoice, setScene11SelectedChoice] = useState<string | null>(null);
+  const [scene12SelectedChoice, setScene12SelectedChoice] = useState<string | null>(null);
+  const [scene21SelectedChoice, setScene21SelectedChoice] = useState<string | null>(null);
+  const [scene22SelectedChoice, setScene22SelectedChoice] = useState<string | null>(null);
+  const [scene31SelectedChoice, setScene31SelectedChoice] = useState<string | null>(null);
+  const [scene32SelectedChoice, setScene32SelectedChoice] = useState<string | null>(null);
+
+  const currentSceneRef = useRef<SceneId>(currentScene);
+  currentSceneRef.current = currentScene;
+
   // Cleanup ambience on unmount
   useEffect(() => {
     return () => {
       ambienceEngine.stop();
+      voiceService.stop();
     };
   }, []);
 
@@ -80,15 +107,21 @@ export default function App() {
       ambienceEngine.setAmbience(SCENE_AMBIENCE_MAP[currentScene]);
     } else {
       ambienceEngine.stop();
+      voiceService.stop();
     }
   }, [currentScene, soundEnabled]);
 
-  // Handle scene-entry sound effects (SFX)
+  // Tự động phát âm thanh lời thoại nhân vật (TTS) & hiệu ứng SFX khi vào scene mới
   useEffect(() => {
     if (!soundEnabled || currentScene === 'start' || currentScene === 'completed') {
+      voiceService.stop();
       return;
     }
 
+    // Dừng âm thanh cũ
+    voiceService.stop();
+
+    // 1. Phát SFX chuyển cảnh / cảnh báo
     if (currentScene === 'scene_2') {
       playSound.warningPulse(soundEnabled);
       playSound.buzzer(soundEnabled);
@@ -111,10 +144,77 @@ export default function App() {
     } else if (currentScene === 'scene_13') {
       playSound.chime(soundEnabled);
       playSound.sparkle(soundEnabled);
-      setTimeout(() => {
-        playSound.victoryFanfare(soundEnabled);
-      }, 300);
     }
+
+    // 2. TTS đọc LỜI THOẠI CỦA NHÂN VẬT (Tuyệt đối không đọc A/B/C hay feedback)
+    const timer = setTimeout(() => {
+      if (currentSceneRef.current !== currentScene) return;
+
+      switch (currentScene) {
+        // Cảnh cũ:
+        case 'scene_1':
+          voiceService.speak(SCENE_1_DATA.dialog, 'nam', soundEnabled);
+          break;
+        case 'scene_2':
+          voiceService.speak(SCENE_2_DATA.dialog, 'nam', soundEnabled);
+          break;
+        case 'scene_3':
+          voiceService.speak(SCENE_3_DATA.dialog, 'nam', soundEnabled);
+          break;
+        case 'scene_4':
+          voiceService.speak(SCENE_4_DATA.dialog, 'nam', soundEnabled);
+          break;
+        case 'scene_6':
+          voiceService.speak(SCENE_6_DATA.dialog, 'ban_lon', soundEnabled);
+          break;
+        case 'scene_7':
+          voiceService.speak(SCENE_7_DATA.dialog, 'ban_lon', soundEnabled);
+          break;
+        case 'scene_8':
+          voiceService.speak(SCENE_8_DATA.dialog, 'ban_lon', soundEnabled);
+          break;
+        case 'scene_9':
+          voiceService.speak(SCENE_9_DATA.dialog, 'ban_lon', soundEnabled);
+          break;
+        case 'scene_10':
+          voiceService.speak(SCENE_10_DATA.dialog, 'hoc_sinh', soundEnabled);
+          break;
+        case 'scene_12':
+          voiceService.speak(SCENE_12_DATA.dialog, 'hoc_sinh', soundEnabled);
+          break;
+        case 'scene_13':
+          voiceService.speak(SCENE_13_DATA.dialog, 'hoc_sinh', soundEnabled);
+          break;
+
+        // 6 TÌNH HUỐNG MỚI:
+        case 'scene_1_1_new':
+          // Nam: "Ê, hôm nay tụi tớ thử cái này nhé! Cậu không thử thì tụi tớ chơi với ai?"
+          voiceService.speak(SCENE_1_1_NEW_DATA.dialog, 'nam', soundEnabled);
+          break;
+        case 'scene_1_2_new':
+          // Nam: "Yên tâm đi, chỉ cần cậu đừng nói với ai là chẳng có chuyện gì đâu."
+          voiceService.speak(SCENE_1_2_NEW_DATA.dialog, 'nam', soundEnabled);
+          break;
+        case 'scene_2_1_new':
+          // Người lạ: "Cô/chú có quà cho các em này. Cầm lấy nhé, bên trong là đồ ăn ngon đấy!"
+          voiceService.speak(SCENE_2_1_NEW_DATA.dialog, 'nguoi_la', soundEnabled);
+          break;
+        case 'scene_2_2_new':
+          // Bạn học sinh: "Nhìn đẹp quá! Chắc là đồ uống mới đấy. Mở ra thử đi!"
+          voiceService.speak(SCENE_2_2_NEW_DATA.dialog, 'hoc_sinh', soundEnabled);
+          break;
+        case 'scene_3_1_new':
+          // Bạn bên cạnh: "Kệ đi, chuyện của họ. Đừng liên quan vào, rắc rối lắm."
+          voiceService.speak(SCENE_3_1_NEW_DATA.dialog, 'ban_ben_canh', soundEnabled);
+          break;
+        case 'scene_3_2_new':
+          // Bạn học sinh: "Tớ chụp lại rồi đăng lên mạng cho mọi người biết, để nhóm đó bị xấu hổ!"
+          voiceService.speak(SCENE_3_2_NEW_DATA.dialog, 'hoc_sinh', soundEnabled);
+          break;
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [currentScene, soundEnabled]);
 
   const triggerScoreChange = (newScore: number, delta: number) => {
@@ -126,6 +226,7 @@ export default function App() {
   };
 
   const handleStart = () => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     playSound.transition(soundEnabled);
     setCurrentScene('scene_1');
@@ -135,6 +236,12 @@ export default function App() {
     setScoreDelta(null);
     setScene3ShowError(false);
     setScene5SelectedOption(null);
+    setScene11SelectedChoice(null);
+    setScene12SelectedChoice(null);
+    setScene21SelectedChoice(null);
+    setScene22SelectedChoice(null);
+    setScene31SelectedChoice(null);
+    setScene32SelectedChoice(null);
   };
 
   // Toggle sound effects & ambience
@@ -143,11 +250,19 @@ export default function App() {
     setSoundEnabled(nextState);
     if (!nextState) {
       ambienceEngine.stop();
+      voiceService.stop();
     }
   };
 
-  // ================= TÌNH HUỐNG 1 HANDLERS =================
+  // Hàm phát lại lời thoại nhân vật hiện tại khi nhấn nút "🔁 Nghe lại"
+  const replayDialogue = (text: string, character: CharacterVoice) => {
+    if (!soundEnabled) return;
+    voiceService.speak(text, character, soundEnabled);
+  };
+
+  // ================= TÌNH HUỐNG PHẦN 1 HANDLERS =================
   const handleScene1Choice = (choiceId: string) => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     if (choiceId === 'A') {
       playSound.scoreDecrease(soundEnabled);
@@ -167,6 +282,7 @@ export default function App() {
   };
 
   const handleScene3Choice = (choiceId: string) => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     if (choiceId === 'B1') {
       playSound.buzzer(soundEnabled);
@@ -185,6 +301,7 @@ export default function App() {
   };
 
   const handleScene5Choice = (optionId: string) => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     setScene5SelectedOption(optionId);
     if (optionId === '1' || optionId === '2') {
@@ -202,7 +319,63 @@ export default function App() {
     }
   };
 
+  // Chuyển từ Scene 5 sang Tình huống 1.1 mới
+  const handleGoToScene11New = () => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    playSound.transition(soundEnabled);
+    setCurrentScene('scene_1_1_new');
+    setScene11SelectedChoice(null);
+  };
+
+  // Chọn đáp án Tình huống 1.1 mới
+  const handleScene11NewChoice = (choiceId: string) => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    setScene11SelectedChoice(choiceId);
+    if (choiceId === 'B') {
+      playSound.chime(soundEnabled);
+      playSound.sparkle(soundEnabled);
+      playSound.scoreIncrease(soundEnabled);
+      triggerScoreChange(Math.min(100, score + 15), 15);
+    } else {
+      playSound.buzzer(soundEnabled);
+      playSound.warningPulse(soundEnabled);
+      playSound.scoreDecrease(soundEnabled);
+      triggerScoreChange(Math.max(20, score - 15), -15);
+    }
+  };
+
+  // Chuyển từ 1.1 mới sang 1.2 mới
+  const handleGoToScene12New = () => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    playSound.transition(soundEnabled);
+    setCurrentScene('scene_1_2_new');
+    setScene12SelectedChoice(null);
+  };
+
+  // Chọn đáp án Tình huống 1.2 mới
+  const handleScene12NewChoice = (choiceId: string) => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    setScene12SelectedChoice(choiceId);
+    if (choiceId === 'B') {
+      playSound.chime(soundEnabled);
+      playSound.sparkle(soundEnabled);
+      playSound.scoreIncrease(soundEnabled);
+      triggerScoreChange(Math.min(100, score + 15), 15);
+    } else {
+      playSound.buzzer(soundEnabled);
+      playSound.warningPulse(soundEnabled);
+      playSound.scoreDecrease(soundEnabled);
+      triggerScoreChange(Math.max(20, score - 15), -15);
+    }
+  };
+
+  // Hoàn thành Phần 1 -> Chuyển sang Phần 2 (Scene 6)
   const handleFinishMission1 = () => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     playSound.transition(soundEnabled);
     setCompletedMissions((prev) => Array.from(new Set([...prev, 1])));
@@ -211,8 +384,9 @@ export default function App() {
     setScore(75);
   };
 
-  // ================= TÌNH HUỐNG 2 HANDLERS =================
+  // ================= TÌNH HUỐNG PHẦN 2 HANDLERS =================
   const handleScene6Choice = (choiceId: string) => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     if (choiceId === 'A') {
       playSound.scoreDecrease(soundEnabled);
@@ -234,7 +408,63 @@ export default function App() {
     }
   };
 
+  // Chuyển từ Scene 9 sang Tình huống 2.1 mới
+  const handleGoToScene21New = () => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    playSound.transition(soundEnabled);
+    setCurrentScene('scene_2_1_new');
+    setScene21SelectedChoice(null);
+  };
+
+  // Chọn đáp án Tình huống 2.1 mới
+  const handleScene21NewChoice = (choiceId: string) => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    setScene21SelectedChoice(choiceId);
+    if (choiceId === 'B') {
+      playSound.chime(soundEnabled);
+      playSound.sparkle(soundEnabled);
+      playSound.scoreIncrease(soundEnabled);
+      triggerScoreChange(Math.min(100, score + 15), 15);
+    } else {
+      playSound.buzzer(soundEnabled);
+      playSound.warningPulse(soundEnabled);
+      playSound.scoreDecrease(soundEnabled);
+      triggerScoreChange(Math.max(20, score - 15), -15);
+    }
+  };
+
+  // Chuyển từ 2.1 mới sang 2.2 mới
+  const handleGoToScene22New = () => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    playSound.transition(soundEnabled);
+    setCurrentScene('scene_2_2_new');
+    setScene22SelectedChoice(null);
+  };
+
+  // Chọn đáp án Tình huống 2.2 mới
+  const handleScene22NewChoice = (choiceId: string) => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    setScene22SelectedChoice(choiceId);
+    if (choiceId === 'C') {
+      playSound.chime(soundEnabled);
+      playSound.sparkle(soundEnabled);
+      playSound.scoreIncrease(soundEnabled);
+      triggerScoreChange(Math.min(100, score + 15), 15);
+    } else {
+      playSound.buzzer(soundEnabled);
+      playSound.warningPulse(soundEnabled);
+      playSound.scoreDecrease(soundEnabled);
+      triggerScoreChange(Math.max(20, score - 15), -15);
+    }
+  };
+
+  // Hoàn thành Phần 2 -> Chuyển sang Phần 3 (Scene 10)
   const handleFinishMission2 = () => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     playSound.transition(soundEnabled);
     setCompletedMissions((prev) => Array.from(new Set([...prev, 2])));
@@ -242,8 +472,9 @@ export default function App() {
     setCurrentScene('scene_10');
   };
 
-  // ================= TÌNH HUỐNG 3 HANDLERS =================
+  // ================= TÌNH HUỐNG PHẦN 3 HANDLERS =================
   const handleScene10Choice = (choiceId: string) => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     if (choiceId === 'A') {
       playSound.scoreDecrease(soundEnabled);
@@ -265,7 +496,66 @@ export default function App() {
     }
   };
 
+  // Chuyển từ Scene 13 sang Tình huống 3.1 mới
+  const handleGoToScene31New = () => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    playSound.transition(soundEnabled);
+    setCurrentScene('scene_3_1_new');
+    setScene31SelectedChoice(null);
+  };
+
+  // Chọn đáp án Tình huống 3.1 mới
+  const handleScene31NewChoice = (choiceId: string) => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    setScene31SelectedChoice(choiceId);
+    if (choiceId === 'C') {
+      playSound.chime(soundEnabled);
+      playSound.sparkle(soundEnabled);
+      playSound.scoreIncrease(soundEnabled);
+      triggerScoreChange(Math.min(100, score + 15), 15);
+    } else {
+      playSound.buzzer(soundEnabled);
+      playSound.warningPulse(soundEnabled);
+      playSound.scoreDecrease(soundEnabled);
+      triggerScoreChange(Math.max(20, score - 15), -15);
+    }
+  };
+
+  // Chuyển từ 3.1 mới sang 3.2 mới
+  const handleGoToScene32New = () => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    playSound.transition(soundEnabled);
+    setCurrentScene('scene_3_2_new');
+    setScene32SelectedChoice(null);
+  };
+
+  // Chọn đáp án Tình huống 3.2 mới
+  const handleScene32NewChoice = (choiceId: string) => {
+    voiceService.stop();
+    playSound.click(soundEnabled);
+    setScene32SelectedChoice(choiceId);
+    if (choiceId === 'B') {
+      playSound.chime(soundEnabled);
+      playSound.sparkle(soundEnabled);
+      playSound.scoreIncrease(soundEnabled);
+      triggerScoreChange(100, 15);
+      setTimeout(() => {
+        playSound.victoryFanfare(soundEnabled);
+      }, 400);
+    } else {
+      playSound.buzzer(soundEnabled);
+      playSound.warningPulse(soundEnabled);
+      playSound.scoreDecrease(soundEnabled);
+      triggerScoreChange(Math.max(20, score - 15), -15);
+    }
+  };
+
+  // Hoàn thành tất cả các tình huống -> Sang trang Completed
   const handleFinishAllMissions = () => {
+    voiceService.stop();
     playSound.click(soundEnabled);
     playSound.transition(soundEnabled);
     setCompletedMissions([1, 2, 3]);
@@ -295,10 +585,10 @@ export default function App() {
         )}
 
         {/* ============================================================== */}
-        {/* =============== NHIỆM VỤ 1: ÁP LỰC BẠN BÈ ================== */}
+        {/* =============== PHẦN 1: ÁP LỰC TỪ BẠN BÈ ==================== */}
         {/* ============================================================== */}
 
-        {/* --- SCENE 1: LỜI RỦ RÊ ĐẦU TIÊN --- */}
+        {/* --- SCENE 1: LỜI RỦ RÊ ĐẦU TIÊN (CŨ) --- */}
         {currentScene === 'scene_1' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-slate-200/90 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -306,14 +596,24 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div className="border-b border-slate-100 pb-2.5">
-                <span className="text-xs font-black text-indigo-600 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
-                  {SCENE_1_DATA.title}
-                </span>
-                <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                  Bối cảnh: {SCENE_1_DATA.context}
-                </p>
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-indigo-600 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                    {SCENE_1_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_1_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_1_DATA.dialog, 'nam')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Nam"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Hộp thoại của Nam */}
@@ -383,7 +683,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 2: HẬU QUẢ CỦA LỰA CHỌN A --- */}
+        {/* --- SCENE 2: HẬU QUẢ CỦA LỰA CHỌN A (CŨ) --- */}
         {currentScene === 'scene_2' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-rose-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-shake">
             <div className="lg:col-span-5 flex flex-col">
@@ -391,10 +691,17 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-rose-700 uppercase tracking-wider bg-rose-100 px-3 py-1 rounded-lg border border-rose-200">
                   {SCENE_2_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_2_DATA.dialog, 'nam')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Nam */}
@@ -422,6 +729,7 @@ export default function App() {
               <div>
                 <button
                   onClick={() => {
+                    voiceService.stop();
                     playSound.click(soundEnabled);
                     playSound.transition(soundEnabled);
                     setCurrentScene('scene_1');
@@ -438,7 +746,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 3: ÁP LỰC TỪ BẠN BÈ --- */}
+        {/* --- SCENE 3: ÁP LỰC TỪ BẠN BÈ (CŨ) --- */}
         {currentScene === 'scene_3' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-amber-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -446,10 +754,17 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-amber-800 uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-lg border border-amber-200">
                   {SCENE_3_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_3_DATA.dialog, 'nam')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Nam */}
@@ -465,7 +780,6 @@ export default function App() {
 
               {scene3ShowError ? (
                 <div className="space-y-4">
-                  {/* Feedback hiển thị văn bản */}
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
                     <div className="flex items-center gap-2 text-rose-700 font-black text-base sm:text-lg mb-2">
                       <AlertTriangle className="w-6 h-6 text-rose-600 animate-bounce" />
@@ -481,6 +795,7 @@ export default function App() {
 
                   <button
                     onClick={() => {
+                      voiceService.stop();
                       playSound.click(soundEnabled);
                       playSound.transition(soundEnabled);
                       setCurrentScene('scene_1');
@@ -543,7 +858,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 4: KIÊN QUYẾT TỪ CHỐI --- */}
+        {/* --- SCENE 4: KIÊN QUYẾT TỪ CHỐI (CŨ) --- */}
         {currentScene === 'scene_4' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-emerald-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -551,10 +866,17 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-wider bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200">
                   {SCENE_4_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_4_DATA.dialog, 'nam')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Nam */}
@@ -585,6 +907,7 @@ export default function App() {
               <div>
                 <button
                   onClick={() => {
+                    voiceService.stop();
                     playSound.click(soundEnabled);
                     playSound.transition(soundEnabled);
                     setCurrentScene('scene_5');
@@ -600,7 +923,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 5: HÀNH ĐỘNG TIẾP THEO --- */}
+        {/* --- SCENE 5: HÀNH ĐỘNG TIẾP NỐI (CŨ) --- */}
         {currentScene === 'scene_5' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-indigo-200 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -656,7 +979,7 @@ export default function App() {
                 })}
               </div>
 
-              {/* Feedback dạng text hiển thị */}
+              {/* Feedback văn bản */}
               {scene5SelectedOption && (
                 <div className="pt-1">
                   {scene5SelectedOption === '3' ? (
@@ -668,8 +991,9 @@ export default function App() {
                       <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
                         {SCENE_5_DATA.choices[2].feedback}
                       </p>
+                      {/* NÚT CHUYỂN TIẾP SANG TÌNH HUỐNG 1.1 MỚI */}
                       <button
-                        onClick={handleFinishMission1}
+                        onClick={handleGoToScene11New}
                         className="inline-flex items-center justify-center gap-3 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
                       >
                         <span>{SCENE_5_DATA.nextMissionButton}</span>
@@ -695,11 +1019,237 @@ export default function App() {
           </div>
         )}
 
+        {/* --- TÌNH HUỐNG 1.1 MỚI: ĐỪNG LÀM MẤT TÌNH BẠN --- */}
+        {currentScene === 'scene_1_1_new' && (
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-indigo-200 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-fade-in">
+            <div className="lg:col-span-5 flex flex-col">
+              <NamCharacter mood="hao_hung" stateLabel={SCENE_1_1_NEW_DATA.characterState} />
+            </div>
+
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                    {SCENE_1_1_NEW_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_1_1_NEW_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_1_1_NEW_DATA.dialog, 'nam')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Nam"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
+
+              {/* Lời thoại của Nam (TTS đọc) */}
+              <div className="relative bg-gradient-to-r from-amber-50 to-orange-50/70 p-5 rounded-2xl border-2 border-amber-200/90 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-xs font-black text-amber-900 uppercase">
+                  <MessageCircle className="w-4 h-4 text-amber-600" />
+                  <span>Lời thoại nhân vật Nam:</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-slate-800 leading-relaxed italic">
+                  {SCENE_1_1_NEW_DATA.dialog}
+                </p>
+              </div>
+
+              {!scene11SelectedChoice ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                    <HelpCircle className="w-4 h-4 text-indigo-500" />
+                    <span>Lựa chọn phản ứng của em:</span>
+                  </p>
+
+                  <div className="space-y-3">
+                    {SCENE_1_1_NEW_DATA.choices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => handleScene11NewChoice(choice.id)}
+                        className="w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-start gap-3.5 bg-slate-50/80 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                      >
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 mt-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          {choice.id}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide uppercase mb-0.5 text-indigo-900">
+                            {choice.label}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-slate-700 leading-snug">
+                            {choice.text}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {scene11SelectedChoice === 'B' ? (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border-2 border-emerald-400 shadow-md">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-base sm:text-lg mb-1">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                        <span>CHÍNH XÁC!</span>
+                      </div>
+                      <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
+                        {SCENE_1_1_NEW_DATA.choices[1].feedback}
+                      </p>
+                      <button
+                        onClick={handleGoToScene12New}
+                        className="inline-flex items-center justify-center gap-3 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
+                      >
+                        <span>{SCENE_1_1_NEW_DATA.nextButton}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
+                      <div className="flex items-center gap-2 text-rose-700 font-black text-base mb-1">
+                        <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        <span>Chưa phù hợp!</span>
+                      </div>
+                      <p className="text-sm font-semibold text-rose-950 leading-relaxed mb-3">
+                        {scene11SelectedChoice === 'A'
+                          ? SCENE_1_1_NEW_DATA.choices[0].feedback
+                          : SCENE_1_1_NEW_DATA.choices[2].feedback}
+                      </p>
+                      <button
+                        onClick={() => setScene11SelectedChoice(null)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>{SCENE_1_1_NEW_DATA.retryButton}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* --- TÌNH HUỐNG 1.2 MỚI: CHỈ CẦN GIẤU NGƯỜI LỚN --- */}
+        {currentScene === 'scene_1_2_new' && (
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-indigo-200 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-fade-in">
+            <div className="lg:col-span-5 flex flex-col">
+              <NamCharacter mood="lung_tung" stateLabel={SCENE_1_2_NEW_DATA.characterState} />
+            </div>
+
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                    {SCENE_1_2_NEW_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_1_2_NEW_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_1_2_NEW_DATA.dialog, 'nam')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Nam"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
+
+              {/* Lời thoại Nam */}
+              <div className="relative bg-gradient-to-r from-amber-50 to-orange-50/70 p-5 rounded-2xl border-2 border-amber-200/90 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-xs font-black text-amber-900 uppercase">
+                  <MessageCircle className="w-4 h-4 text-amber-600" />
+                  <span>Lời thoại nhân vật Nam:</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-slate-800 leading-relaxed italic">
+                  {SCENE_1_2_NEW_DATA.dialog}
+                </p>
+              </div>
+
+              {!scene12SelectedChoice ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                    <HelpCircle className="w-4 h-4 text-indigo-500" />
+                    <span>Lựa chọn phản ứng của em:</span>
+                  </p>
+
+                  <div className="space-y-3">
+                    {SCENE_1_2_NEW_DATA.choices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => handleScene12NewChoice(choice.id)}
+                        className="w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-start gap-3.5 bg-slate-50/80 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                      >
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 mt-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          {choice.id}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide uppercase mb-0.5 text-indigo-900">
+                            {choice.label}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-slate-700 leading-snug">
+                            {choice.text}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {scene12SelectedChoice === 'B' ? (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border-2 border-emerald-400 shadow-md">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-base sm:text-lg mb-1">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                        <span>CHÍNH XÁC!</span>
+                      </div>
+                      <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
+                        {SCENE_1_2_NEW_DATA.choices[1].feedback}
+                      </p>
+                      <button
+                        onClick={handleFinishMission1}
+                        className="inline-flex items-center justify-center gap-3 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
+                      >
+                        <span>{SCENE_1_2_NEW_DATA.nextButton}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
+                      <div className="flex items-center gap-2 text-rose-700 font-black text-base mb-1">
+                        <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        <span>Chưa phù hợp!</span>
+                      </div>
+                      <p className="text-sm font-semibold text-rose-950 leading-relaxed mb-3">
+                        {scene12SelectedChoice === 'A'
+                          ? SCENE_1_2_NEW_DATA.choices[0].feedback
+                          : SCENE_1_2_NEW_DATA.choices[2].feedback}
+                      </p>
+                      <button
+                        onClick={() => setScene12SelectedChoice(null)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>{SCENE_1_2_NEW_DATA.retryButton}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ============================================================== */}
-        {/* ============ NHIỆM VỤ 2: LY NƯỚC LẠ Ở CỔNG TRƯỜNG ============ */}
+        {/* ============ PHẦN 2: CẢNH GIÁC ĐỒ UỐNG, SẢN PHẨM LẠ ========== */}
         {/* ============================================================== */}
 
-        {/* --- SCENE 6: LỜI MỜI BẤT NGỜ --- */}
+        {/* --- SCENE 6: LỜI MỜI BẤT NGỜ (CŨ) --- */}
         {currentScene === 'scene_6' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-sky-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -707,14 +1257,24 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div className="border-b border-slate-100 pb-2.5">
-                <span className="text-xs font-black text-sky-700 uppercase tracking-wider bg-sky-100 px-3 py-1 rounded-lg border border-sky-200">
-                  {SCENE_6_DATA.title}
-                </span>
-                <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                  Bối cảnh: {SCENE_6_DATA.context}
-                </p>
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-sky-700 uppercase tracking-wider bg-sky-100 px-3 py-1 rounded-lg border border-sky-200">
+                    {SCENE_6_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_6_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_6_DATA.dialog, 'ban_lon')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Bạn lớn"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Bạn lớn */}
@@ -784,7 +1344,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 7: HẬU QUẢ LỰA CHỌN A --- */}
+        {/* --- SCENE 7: HẬU QUẢ LỰA CHỌN A (CŨ) --- */}
         {currentScene === 'scene_7' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-rose-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-shake">
             <div className="lg:col-span-5 flex flex-col">
@@ -792,10 +1352,17 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-rose-700 uppercase tracking-wider bg-rose-100 px-3 py-1 rounded-lg border border-rose-200">
                   {SCENE_7_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_7_DATA.dialog, 'ban_lon')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Bạn lớn */}
@@ -823,6 +1390,7 @@ export default function App() {
               <div>
                 <button
                   onClick={() => {
+                    voiceService.stop();
                     playSound.click(soundEnabled);
                     playSound.transition(soundEnabled);
                     setCurrentScene('scene_6');
@@ -837,7 +1405,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 8: LỰA CHỌN B – DỪNG LẠI TÒ MÒ --- */}
+        {/* --- SCENE 8: LỰA CHỌN B (CŨ) --- */}
         {currentScene === 'scene_8' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-amber-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -845,10 +1413,17 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-amber-800 uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-lg border border-amber-200">
                   {SCENE_8_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_8_DATA.dialog, 'ban_lon')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Bạn lớn */}
@@ -876,6 +1451,7 @@ export default function App() {
               <div>
                 <button
                   onClick={() => {
+                    voiceService.stop();
                     playSound.click(soundEnabled);
                     playSound.transition(soundEnabled);
                     setCurrentScene('scene_6');
@@ -890,7 +1466,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 9: LỰA CHỌN C – XỬ LÝ ĐÚNG --- */}
+        {/* --- SCENE 9: KẾT QUẢ TỐT (CŨ) --- */}
         {currentScene === 'scene_9' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-emerald-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -898,13 +1474,20 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-wider bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200">
                   {SCENE_9_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_9_DATA.dialog, 'ban_lon')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
-              {/* Lời thoại Bạn lớn: "Ừ, thôi vậy..." */}
+              {/* Lời thoại Bạn lớn */}
               <div className="bg-gradient-to-r from-emerald-50 to-teal-50/70 p-5 rounded-2xl border-2 border-emerald-200/90 shadow-sm">
                 <div className="flex items-center gap-2 mb-2 text-xs font-black text-emerald-900 uppercase">
                   <MessageCircle className="w-4 h-4 text-emerald-600" />
@@ -931,9 +1514,10 @@ export default function App() {
                 </p>
               </div>
 
+              {/* NÚT CHUYỂN TIẾP SANG TÌNH HUỐNG 2.1 MỚI */}
               <div>
                 <button
-                  onClick={handleFinishMission2}
+                  onClick={handleGoToScene21New}
                   className="inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white text-base font-black shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-teal-800"
                 >
                   <span>{SCENE_9_DATA.nextButton}</span>
@@ -944,11 +1528,237 @@ export default function App() {
           </div>
         )}
 
+        {/* --- TÌNH HUỐNG 2.1 MỚI: MÓN QUÀ KHÔNG TÊN --- */}
+        {currentScene === 'scene_2_1_new' && (
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-sky-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-fade-in">
+            <div className="lg:col-span-5 flex flex-col">
+              <OlderStudentCharacter sceneId="scene_6" stateLabel={SCENE_2_1_NEW_DATA.characterState} />
+            </div>
+
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-sky-700 uppercase tracking-wider bg-sky-100 px-3 py-1 rounded-lg border border-sky-200">
+                    {SCENE_2_1_NEW_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_2_1_NEW_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_2_1_NEW_DATA.dialog, 'nguoi_la')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Người lạ"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
+
+              {/* Lời thoại Người lạ (TTS đọc) */}
+              <div className="bg-gradient-to-r from-sky-50 to-blue-50/70 p-5 rounded-2xl border-2 border-sky-200 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-xs font-black text-sky-900 uppercase">
+                  <MessageCircle className="w-4 h-4 text-sky-600" />
+                  <span>Lời thoại nhân vật Người lạ:</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-slate-800 leading-relaxed italic">
+                  {SCENE_2_1_NEW_DATA.dialog}
+                </p>
+              </div>
+
+              {!scene21SelectedChoice ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                    <HelpCircle className="w-4 h-4 text-sky-600" />
+                    <span>Lựa chọn của học sinh:</span>
+                  </p>
+
+                  <div className="space-y-3">
+                    {SCENE_2_1_NEW_DATA.choices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => handleScene21NewChoice(choice.id)}
+                        className="w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-start gap-3.5 bg-slate-50/80 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40"
+                      >
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 mt-0.5 bg-sky-100 text-sky-800 border border-sky-200">
+                          {choice.id}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide uppercase mb-0.5 text-sky-900">
+                            {choice.label}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-slate-700 leading-snug">
+                            {choice.text}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {scene21SelectedChoice === 'B' ? (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border-2 border-emerald-400 shadow-md">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-base sm:text-lg mb-1">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                        <span>HOÀN TOÀN CHÍNH XÁC!</span>
+                      </div>
+                      <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
+                        {SCENE_2_1_NEW_DATA.choices[1].feedback}
+                      </p>
+                      <button
+                        onClick={handleGoToScene22New}
+                        className="inline-flex items-center justify-center gap-3 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
+                      >
+                        <span>{SCENE_2_1_NEW_DATA.nextButton}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
+                      <div className="flex items-center gap-2 text-rose-700 font-black text-base mb-1">
+                        <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        <span>Chưa an toàn!</span>
+                      </div>
+                      <p className="text-sm font-semibold text-rose-950 leading-relaxed mb-3">
+                        {scene21SelectedChoice === 'A'
+                          ? SCENE_2_1_NEW_DATA.choices[0].feedback
+                          : SCENE_2_1_NEW_DATA.choices[2].feedback}
+                      </p>
+                      <button
+                        onClick={() => setScene21SelectedChoice(null)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>{SCENE_2_1_NEW_DATA.retryButton}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* --- TÌNH HUỐNG 2.2 MỚI: BAO BÌ THẬT ĐẸP --- */}
+        {currentScene === 'scene_2_2_new' && (
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-sky-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-fade-in">
+            <div className="lg:col-span-5 flex flex-col">
+              <OlderStudentCharacter sceneId="scene_8" stateLabel={SCENE_2_2_NEW_DATA.characterState} />
+            </div>
+
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-sky-700 uppercase tracking-wider bg-sky-100 px-3 py-1 rounded-lg border border-sky-200">
+                    {SCENE_2_2_NEW_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_2_2_NEW_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_2_2_NEW_DATA.dialog, 'hoc_sinh')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Bạn học sinh"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
+
+              {/* Lời thoại Bạn học sinh (TTS đọc) */}
+              <div className="bg-gradient-to-r from-sky-50 to-blue-50/70 p-5 rounded-2xl border-2 border-sky-200 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-xs font-black text-sky-900 uppercase">
+                  <MessageCircle className="w-4 h-4 text-sky-600" />
+                  <span>Lời thoại nhân vật Bạn học sinh:</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-slate-800 leading-relaxed italic">
+                  {SCENE_2_2_NEW_DATA.dialog}
+                </p>
+              </div>
+
+              {!scene22SelectedChoice ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                    <HelpCircle className="w-4 h-4 text-sky-600" />
+                    <span>Lựa chọn của học sinh:</span>
+                  </p>
+
+                  <div className="space-y-3">
+                    {SCENE_2_2_NEW_DATA.choices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => handleScene22NewChoice(choice.id)}
+                        className="w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-start gap-3.5 bg-slate-50/80 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40"
+                      >
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 mt-0.5 bg-sky-100 text-sky-800 border border-sky-200">
+                          {choice.id}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide uppercase mb-0.5 text-sky-900">
+                            {choice.label}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-slate-700 leading-snug">
+                            {choice.text}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {scene22SelectedChoice === 'C' ? (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border-2 border-emerald-400 shadow-md">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-base sm:text-lg mb-1">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                        <span>CHÍNH XÁC!</span>
+                      </div>
+                      <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
+                        {SCENE_2_2_NEW_DATA.choices[2].feedback}
+                      </p>
+                      <button
+                        onClick={handleFinishMission2}
+                        className="inline-flex items-center justify-center gap-3 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
+                      >
+                        <span>{SCENE_2_2_NEW_DATA.nextButton}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
+                      <div className="flex items-center gap-2 text-rose-700 font-black text-base mb-1">
+                        <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        <span>Chưa an toàn!</span>
+                      </div>
+                      <p className="text-sm font-semibold text-rose-950 leading-relaxed mb-3">
+                        {scene22SelectedChoice === 'A'
+                          ? SCENE_2_2_NEW_DATA.choices[0].feedback
+                          : SCENE_2_2_NEW_DATA.choices[1].feedback}
+                      </p>
+                      <button
+                        onClick={() => setScene22SelectedChoice(null)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>{SCENE_2_2_NEW_DATA.retryButton}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ============================================================== */}
-        {/* =============== NHIỆM VỤ 3: ĐỒ VẬT ĐÁNG NGỜ ================== */}
+        {/* ========= PHẦN 3: KHÔNG LÀM NGƠ VÀ BIẾT TÌM SỰ GIÚP ĐỠ ======= */}
         {/* ============================================================== */}
 
-        {/* --- SCENE 10: TÌNH HUỐNG TRONG LỚP HỌC --- */}
+        {/* --- SCENE 10: TÌNH HUỐNG TRONG LỚP HỌC (CŨ) --- */}
         {currentScene === 'scene_10' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-indigo-200 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -956,14 +1766,24 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div className="border-b border-slate-100 pb-2.5">
-                <span className="text-xs font-black text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
-                  {SCENE_10_DATA.title}
-                </span>
-                <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                  Bối cảnh: {SCENE_10_DATA.context}
-                </p>
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                    {SCENE_10_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_10_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_10_DATA.dialog, 'hoc_sinh')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Bạn học sinh"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Bạn học sinh */}
@@ -1033,7 +1853,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 11: HẬU QUẢ LỰA CHỌN A --- */}
+        {/* --- SCENE 11: HẬU QUẢ LỰA CHỌN A (CŨ) --- */}
         {currentScene === 'scene_11' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-rose-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-shake">
             <div className="lg:col-span-5 flex flex-col">
@@ -1068,6 +1888,7 @@ export default function App() {
               <div>
                 <button
                   onClick={() => {
+                    voiceService.stop();
                     playSound.click(soundEnabled);
                     playSound.transition(soundEnabled);
                     setCurrentScene('scene_10');
@@ -1082,7 +1903,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 12: HẬU QUẢ LỰA CHỌN B --- */}
+        {/* --- SCENE 12: HẬU QUẢ LỰA CHỌN B (CŨ) --- */}
         {currentScene === 'scene_12' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-amber-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -1090,10 +1911,17 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-amber-800 uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-lg border border-amber-200">
                   {SCENE_12_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_12_DATA.dialog, 'hoc_sinh')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
               </div>
 
               {/* Lời thoại Bạn học sinh */}
@@ -1121,6 +1949,7 @@ export default function App() {
               <div>
                 <button
                   onClick={() => {
+                    voiceService.stop();
                     playSound.click(soundEnabled);
                     playSound.transition(soundEnabled);
                     setCurrentScene('scene_10');
@@ -1135,7 +1964,7 @@ export default function App() {
           </div>
         )}
 
-        {/* --- SCENE 13: XỬ LÝ ĐÚNG --- */}
+        {/* --- SCENE 13: XỬ LÝ ĐÚNG (CŨ) --- */}
         {currentScene === 'scene_13' && (
           <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-emerald-300 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-5 flex flex-col">
@@ -1143,15 +1972,23 @@ export default function App() {
             </div>
 
             <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
-              <div>
+              <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-800 uppercase tracking-wider bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-200">
                   {SCENE_13_DATA.title}
                 </span>
+                <button
+                  onClick={() => replayDialogue(SCENE_13_DATA.dialog, 'hoc_sinh')}
+                  className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
 
-                <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 font-bold text-sm flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>Vùng an toàn đã được kích hoạt! Em đã lùi lại và báo giáo viên.</span>
-                </div>
+              {/* Lời thoại bạn học sinh */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-emerald-900 font-bold text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                <span>{SCENE_13_DATA.dialog} Vùng an toàn đã được kích hoạt! Em đã lùi lại và báo giáo viên.</span>
               </div>
 
               {/* Feedback văn bản */}
@@ -1170,15 +2007,242 @@ export default function App() {
                 </p>
               </div>
 
+              {/* NÚT CHUYỂN TIẾP SANG TÌNH HUỐNG 3.1 MỚI */}
               <div>
                 <button
-                  onClick={handleFinishAllMissions}
+                  onClick={handleGoToScene31New}
                   className="inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
                 >
-                  <span>{SCENE_13_DATA.completionButton}</span>
+                  <span>{SCENE_13_DATA.nextButton}</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TÌNH HUỐNG 3.1 MỚI: MÌNH CÓ NÊN NÓI KHÔNG? --- */}
+        {currentScene === 'scene_3_1_new' && (
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-indigo-200 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-fade-in">
+            <div className="lg:col-span-5 flex flex-col">
+              <ClassroomMysteryCharacter sceneId="scene_11" stateLabel={SCENE_3_1_NEW_DATA.characterState} />
+            </div>
+
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                    {SCENE_3_1_NEW_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_3_1_NEW_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_3_1_NEW_DATA.dialog, 'ban_ben_canh')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Bạn bên cạnh"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
+
+              {/* Lời thoại Bạn bên cạnh (TTS đọc) */}
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50/70 p-5 rounded-2xl border-2 border-indigo-200 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-xs font-black text-indigo-900 uppercase">
+                  <MessageCircle className="w-4 h-4 text-indigo-600" />
+                  <span>Lời thoại nhân vật Bạn bên cạnh:</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-slate-800 leading-relaxed italic">
+                  {SCENE_3_1_NEW_DATA.dialog}
+                </p>
+              </div>
+
+              {!scene31SelectedChoice ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                    <HelpCircle className="w-4 h-4 text-indigo-500" />
+                    <span>Lựa chọn của em:</span>
+                  </p>
+
+                  <div className="space-y-3">
+                    {SCENE_3_1_NEW_DATA.choices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => handleScene31NewChoice(choice.id)}
+                        className="w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-start gap-3.5 bg-slate-50/80 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                      >
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 mt-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          {choice.id}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide uppercase mb-0.5 text-indigo-900">
+                            {choice.label}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-slate-700 leading-snug">
+                            {choice.text}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {scene31SelectedChoice === 'C' ? (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border-2 border-emerald-400 shadow-md">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-base sm:text-lg mb-1">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                        <span>RẤT TỐT!</span>
+                      </div>
+                      <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
+                        {SCENE_3_1_NEW_DATA.choices[2].feedback}
+                      </p>
+                      <button
+                        onClick={handleGoToScene32New}
+                        className="inline-flex items-center justify-center gap-3 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
+                      >
+                        <span>{SCENE_3_1_NEW_DATA.nextButton}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
+                      <div className="flex items-center gap-2 text-rose-700 font-black text-base mb-1">
+                        <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        <span>Chưa phù hợp!</span>
+                      </div>
+                      <p className="text-sm font-semibold text-rose-950 leading-relaxed mb-3">
+                        {scene31SelectedChoice === 'A'
+                          ? SCENE_3_1_NEW_DATA.choices[0].feedback
+                          : SCENE_3_1_NEW_DATA.choices[1].feedback}
+                      </p>
+                      <button
+                        onClick={() => setScene31SelectedChoice(null)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>{SCENE_3_1_NEW_DATA.retryButton}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* --- TÌNH HUỐNG 3.2 MỚI: ĐỪNG ĐĂNG LÊN MẠNG --- */}
+        {currentScene === 'scene_3_2_new' && (
+          <div className="w-full bg-white/95 backdrop-blur-md rounded-3xl border-2 border-indigo-200 shadow-2xl p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch animate-fade-in">
+            <div className="lg:col-span-5 flex flex-col">
+              <ClassroomMysteryCharacter sceneId="scene_12" stateLabel={SCENE_3_2_NEW_DATA.characterState} />
+            </div>
+
+            <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+              <div className="border-b border-slate-100 pb-2.5 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-black text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200">
+                    {SCENE_3_2_NEW_DATA.title}
+                  </span>
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                    Bối cảnh: {SCENE_3_2_NEW_DATA.context}
+                  </p>
+                </div>
+                <button
+                  onClick={() => replayDialogue(SCENE_3_2_NEW_DATA.dialog, 'hoc_sinh')}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-300 transition-all cursor-pointer"
+                  title="Nghe lại lời thoại Bạn học sinh"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Nghe lại</span>
+                </button>
+              </div>
+
+              {/* Lời thoại Bạn học sinh (TTS đọc) */}
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50/70 p-5 rounded-2xl border-2 border-indigo-200 shadow-sm">
+                <div className="flex items-center gap-2 mb-2 text-xs font-black text-indigo-900 uppercase">
+                  <MessageCircle className="w-4 h-4 text-indigo-600" />
+                  <span>Lời thoại nhân vật Bạn học sinh:</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-slate-800 leading-relaxed italic">
+                  {SCENE_3_2_NEW_DATA.dialog}
+                </p>
+              </div>
+
+              {!scene32SelectedChoice ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-2">
+                    <HelpCircle className="w-4 h-4 text-indigo-500" />
+                    <span>Lựa chọn của em:</span>
+                  </p>
+
+                  <div className="space-y-3">
+                    {SCENE_3_2_NEW_DATA.choices.map((choice) => (
+                      <button
+                        key={choice.id}
+                        onClick={() => handleScene32NewChoice(choice.id)}
+                        className="w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-start gap-3.5 bg-slate-50/80 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40"
+                      >
+                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0 mt-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          {choice.id}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-black tracking-wide uppercase mb-0.5 text-indigo-900">
+                            {choice.label}
+                          </div>
+                          <div className="text-sm sm:text-base font-semibold text-slate-700 leading-snug">
+                            {choice.text}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {scene32SelectedChoice === 'B' ? (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 via-teal-50 to-green-100 border-2 border-emerald-400 shadow-md">
+                      <div className="flex items-center gap-2 text-emerald-800 font-black text-base sm:text-lg mb-1">
+                        <ShieldCheck className="w-6 h-6 text-emerald-600" />
+                        <span>CHÍNH XÁC!</span>
+                      </div>
+                      <p className="text-sm sm:text-base font-semibold text-emerald-950 leading-relaxed mb-3">
+                        {SCENE_3_2_NEW_DATA.choices[1].feedback}
+                      </p>
+                      <button
+                        onClick={handleFinishAllMissions}
+                        className="inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-base font-black shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer border-b-4 border-emerald-800"
+                      >
+                        <span>{SCENE_3_2_NEW_DATA.nextButton}</span>
+                        <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-red-100 border-2 border-rose-400 shadow-md">
+                      <div className="flex items-center gap-2 text-rose-700 font-black text-base mb-1">
+                        <AlertTriangle className="w-5 h-5 text-rose-600" />
+                        <span>Chưa an toàn!</span>
+                      </div>
+                      <p className="text-sm font-semibold text-rose-950 leading-relaxed mb-3">
+                        {scene32SelectedChoice === 'A'
+                          ? SCENE_3_2_NEW_DATA.choices[0].feedback
+                          : SCENE_3_2_NEW_DATA.choices[2].feedback}
+                      </p>
+                      <button
+                        onClick={() => setScene32SelectedChoice(null)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>{SCENE_3_2_NEW_DATA.retryButton}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1187,7 +2251,7 @@ export default function App() {
       {/* Footer */}
       <footer className="w-full bg-slate-950/80 border-t border-slate-800/80 py-2.5 px-4 text-center text-xs text-slate-400">
         <p className="font-medium">
-          Mô phỏng giáo dục kỹ năng sống dành cho học sinh tiểu học · Tuyệt đối nói không với thuốc lá điện tử & đồ vật lạ
+          Mô phỏng giáo dục kỹ năng sống dành cho học sinh tiểu học & THCS · Biết nói “KHÔNG” trước áp lực từ bạn bè
         </p>
       </footer>
     </div>
